@@ -17,7 +17,7 @@ const App = () => {
     axios
       .get("/api/extensions")
       .then((response) => {
-        // The data should already be sorted by the backend, so we set it directly
+// The data should already be sorted by the backend, so we set it directly
         setExtensions(response.data);
         setLoading(false);
       })
@@ -30,15 +30,18 @@ const App = () => {
 
   // Handle pagination change
   const handlePageChange = ({ selected }) => {
-    setCurrentPage(selected);
+    const maxPage = Math.max(0, Math.ceil(filteredExtensions.length / itemsPerPage) - 1); // Don't allow negative pages
+    const validPage = Math.min(selected, maxPage); // Ensure we're not going beyond the last page
+    setCurrentPage(validPage);
   };
 
   // Handle search query change
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
+    setCurrentPage(0); // Reset page to 0 whenever the search query changes
   };
-
-  const filteredExtensions = extensions.filter((extension) =>
+  
+    const filteredExtensions = extensions.filter((extension) =>
     extension.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -46,15 +49,15 @@ const App = () => {
   const sortedExtensions = filteredExtensions.sort((a, b) =>
     a.toLowerCase().localeCompare(b.toLowerCase())
   );
-  // Slice the sorted and filtered array to get the current page items
-  const currentExtensions = filteredExtensions.slice(
+
+  // Paginating the sorted list
+  const currentExtensions = sortedExtensions.slice(
     currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
+    Math.min((currentPage + 1) * itemsPerPage, filteredExtensions.length) // Prevent slicing beyond the available list
   );
 
-
-  // ================ output==========
-// (68) ['aluisiodeavila.fuedskeps-theme', 'AndrewMcGoveran.react-component-generator', 'aPinix.apinix-theme', 'batisteo.vscode-django', 'bceskavich.theme-dracula-at-night', 'benjaminbenais.copilot-theme', 'Blackboxapp.blackbox', 'burkeholland.simple-react-snippets', 'chris-noring.node-snippets', 'DaltonMenezes.aura-theme', 'daniel-lvovsky.galax-theme', 'danwahlin.angular2-snippets', 'donjayamanne.python-environment-manager', 'donjayamanne.python-extension-pack', 'eamodio.gitlens', 'ecmel.vscode-html-css', 'EQuimper.react-native-react-redux', 'esbenp.prettier-vscode', 'evondev.indent-rainbow-palettes', 'formulahendry.auto-close-tag', 'formulahendry.auto-rename-tag', 'GitHub.copilot', 'GitHub.copilot-chat', 'jundat95.react-native-snippet', 'kevinnorman.jammy-jellyfish-color-theme', 'KevinRose.vsc-python-indent', 'lakshits11.best-themes-redefined', 'lakshits11.neon-city', 'leizongmin.node-module-intellisense', 'miguelsolorio.min-theme', 'mikejk8s.pink-cyan', 'miramac.vscode-exec-node', 'mohd-akram.vscode-html-format', 'moondevaa.moon-violet-dark-plus', 'ms-python.debugpy', 'ms-python.python', 'ms-python.vscode-pylance', 'ms-toolsai.jupyter', 'ms-toolsai.jupyter-keymap', 'ms-toolsai.jupyter-renderers', 'ms-toolsai.vscode-jupyter-cell-tags', 'ms-toolsai.vscode-jupyter-slideshow', 'msjsdiag.vscode-react-native', 'nerudevs.jellyfish-dark', 'NguyenHoangLam.beautiful-dracula', 'njpwerner.autodocstring', 'njqdev.vscode-python-typehint', 'oderwat.indent-rainbow', 'PawelBorkar.jellyfish', 'planbcoding.vscode-react-refactor', 'ritwickdey.LiveServer', 'rodrigovallades.es7-react-js-snippets', 'roerohan.mongo-snippets-for-node-js', 'rvest.vs-code-prettier-eslint', 'shiro.pythonpack', 'sidthesloth.html5-boilerplate', 'stylelint.vscode-stylelint', 'tal7aouy.icons', 'tgreen7.vs-code-node-require', 'VisualStudioExptTeam.intellicode-api-usage-examples', 'VisualStudioExptTeam.vscodeintellicode', 'vscode-icons-team.vscode-icons', 'wholroyd.jinja', 'Wscats.delete-node-modules', 'xabikos.JavaScriptSnippets', 'xabikos.ReactSnippets', 'zhang-renyang.vscode-react', 'Zignd.html-css-class-completion'] '...extensions'
+  // Calculate the number of pages based on the filtered extensions
+const pageCount = Math.ceil(filteredExtensions.length / itemsPerPage);
 
   return (
     <Box sx={{ maxWidth: "1200px", margin: "0 auto", padding: 4 }}>
@@ -86,8 +89,7 @@ const App = () => {
           <>
             {/* Extensions Grid */}
             <div className="extension-grid">
-            {currentExtensions.map((extension, index) => {
-                // Extracting the part after the first dot
+              {currentExtensions.map((extension, index) => {
                 const extensionNameAfterDot = extension.split(".")[1];
 
                 return (
@@ -100,7 +102,7 @@ const App = () => {
 
             {/* Pagination */}
             <ReactPaginate
-              pageCount={Math.ceil(filteredExtensions.length / itemsPerPage)}
+              pageCount={pageCount}
               pageRangeDisplayed={5}
               marginPagesDisplayed={2}
               onPageChange={handlePageChange}
